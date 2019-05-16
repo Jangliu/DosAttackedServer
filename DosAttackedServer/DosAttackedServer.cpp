@@ -7,6 +7,7 @@
 #pragma comment (lib, "wsock32.lib")
 
 
+bool flag = TRUE;
 
 struct argv
 {
@@ -31,7 +32,6 @@ unsigned _stdcall recv_proc(LPVOID lpParam);
 
 int main()
 {
-	bool flag = TRUE;
 	int ThreadID = 0;
 	struct argv Argv;
 	SOCKET MainSocket;
@@ -87,10 +87,15 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 	u_long arg;
 	arg = 0;
 	ioctlsocket(MainSocket, FIONBIO, &arg);
+	Linklist*Head,*Current;
+	Head = initlinklist(10);
+	Current = Head->next;
 	for (int j = 0; j < 10; j++)
 	{
 		ioctlsocket(Units[i].s, FIONBIO, &arg);
+		Current->Unit = Units[i];
 	}
+	
 	while (1)
 	{
 		if (i < 10)
@@ -102,16 +107,21 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 			{
 				i++;
 			}
+			if (i == 10)
+			{
+				flag = FALSE;
+			}
 		}
 		FD_ZERO(&read_list);
 		FD_ZERO(&exception_list);
+		FD_ZERO(&write_list);
 		for (i; i < 10; i++)
 		{
 			FD_SET(Units[i].s, &read_list);
 			FD_SET(Units[i].s, &write_list);
 			FD_SET(Units[i].s, &exception_list);
 		}
-		select(11, &read_list, NULL, &exception_list, &tmo);
+		select(11, &read_list, &write_list, &exception_list, &tmo);
 		for (int j = 0; j < i; j++)
 		{
 			if (FD_ISSET(Units[j].s, &read_list))
