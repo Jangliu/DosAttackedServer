@@ -1,8 +1,3 @@
-﻿  pch.cpp
-  DosAttackedServer.cpp
-c:\users\jangliu\desktop\dosattackedserver\dosattackedserver\dosattackedserver.cpp(58): warning C4553: '==': result of expression not used; did you intend '='?
-c:\users\jangliu\desktop\dosattackedserver\dosattackedserver\dosattackedserver.cpp(33): warning C4101: 'hThread': unreferenced local variable
-  Source.cpp
-  Generating Code...
-Source.obj : error LNK2005: _main already defined in DosAttackedServer.obj
-C:\Users\Jangliu\Desktop\DosAttackedServer\Debug\DosAttackedServer.exe : fatal error LNK1169: one or more multiply defined symbols found
+﻿  DosAttackedServer.cpp
+c:\users\jangliu\desktop\dosattackedserver\dosattackedserver\dosattackedserver.cpp(44): warning C4101: 'hThread': unreferenced local variable
+  DosAttackedServer.vcxproj -> C:\Users\JangLiu\Desktop\DosAttackedServer\Debug\DosAttackedServer.exe
