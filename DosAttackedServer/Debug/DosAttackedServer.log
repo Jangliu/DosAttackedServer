@@ -1,3 +1,2 @@
 ﻿  DosAttackedServer.cpp
-c:\users\jangliu\desktop\dosattackedserver\dosattackedserver\dosattackedserver.cpp(44): warning C4101: 'hThread': unreferenced local variable
   DosAttackedServer.vcxproj -> C:\Users\JangLiu\Desktop\DosAttackedServer\Debug\DosAttackedServer.exe
