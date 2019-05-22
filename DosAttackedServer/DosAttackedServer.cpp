@@ -14,6 +14,8 @@ struct unit
 	SOCKET s;
 	char buf[100000];
 	int recvnum;
+	bool SendFunc;
+	bool RecvFunc;
 };
 
 typedef struct Unit
@@ -36,18 +38,18 @@ int main()
 	sockaddr_in local;
 	
 	local.sin_family = AF_INET;
-	local.sin_addr.S_un.S_addr = htons(INADDR_LOOPBACK);
+	local.sin_addr.S_un.S_addr = htonl(INADDR_LOOPBACK);
 	local.sin_port = htons(0x7856);
 
 	WSAStartup(0x101, &wsa);
 
-
+	int count = 0;
 	while (1)
 	{
 		if (flag == TRUE)
 		{
 			int judge;
-			judge = _beginthreadex(NULL, 0, recv_proc, (LPVOID)&local, 0, NULL);
+			judge = _beginthreadex(NULL, 0, recv_proc, (LPVOID)&flag, 0, NULL);
 			if (judge == 0)
 			{
 				printf("Create new thread failed.\n");
@@ -56,6 +58,8 @@ int main()
 			else
 			{
 				flag = FALSE;
+				printf("Thread %d Created.\n", count + 1);
+				count++;
 			}
 		}
 	}
@@ -74,20 +78,25 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 	int i = 0;
 	SOCKET MainSocket;
 	struct sockaddr_in remote_addr,local;
-	struct sockaddr_in*lo=&local;
-	lo = (sockaddr_in*)lpParam;
-	MainSocket = socket(AF_INET, SOCK_STREAM, 0);
-	bind(MainSocket, (sockaddr*)&local, sizeof(local));
+	local.sin_family = AF_INET;
+	local.sin_addr.S_un.S_addr = htonl(INADDR_LOOPBACK);
+	local.sin_port = htons(0x7856);
+	//struct sockaddr_in*lo=&local;
+	//lo = (sockaddr_in*)lpParam;
 	u_long arg;
 	arg = 1;
-	ioctlsocket(MainSocket, FIONBIO, &arg);
 	Linklist*Head,*Current;
 	Head = (Linklist*)malloc(sizeof(Linklist));
 	Head->front = NULL;
 	Head->next = NULL;
 	Current = Head;
+	MainSocket = socket(AF_INET, SOCK_STREAM, 0);
+	bind(MainSocket, (sockaddr*)&local, sizeof(local));
+	ioctlsocket(MainSocket, FIONBIO, &arg);
+	listen(MainSocket, 10);
+	int countdown = 10;
 	
-	while (1)
+	while (countdown>-1)
 	{
 		FD_ZERO(&read_list);
 		FD_ZERO(&exception_list);
@@ -95,7 +104,6 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 		if (i < 10)
 		{
 			FD_SET(MainSocket, &read_list);
-			listen(MainSocket, 10);
 		}
 		select(0, &read_list, &write_list, &exception_list, &tmo);
 		if (FD_ISSET(MainSocket, &read_list))
@@ -103,16 +111,20 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 			int len;
 			len = sizeof(remote_addr);
 			Units[i].s = accept(MainSocket, (sockaddr*)&remote_addr, &len);
+			Units[i].SendFunc = TRUE;
+			Units[i].RecvFunc = TRUE;
 			i++;
 			if (i == 10)
 			{
-				flag = FALSE;
+				flag = TRUE;
+				closesocket(MainSocket);
 			}
 			for (int j = 0; j < i; j++)
 			{
 				FD_SET(Units[j].s, &read_list);
 				FD_SET(Units[j].s, &write_list);
 				FD_SET(Units[j].s, &exception_list);
+				ioctlsocket(Units[j].s, FIONBIO, &arg);
 			}
 		}
 		for (int j = 0; j < i; j++)
@@ -129,6 +141,13 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 					Current->next = node;
 					Current->Unit = Units[j];
 				}
+				else if (Checkrecvnum == -1)
+				{
+
+					countdown--;
+					shutdown(Units[j].s, SD_RECEIVE);
+					Units[j].RecvFunc = FALSE;
+				}
 				else
 					break;
 			}
@@ -144,11 +163,12 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 					int sendnum;
 					char *p = Current->Unit.buf;
 					sendnum = send(Current->Unit.s, p, Current->Unit.recvnum, 0);
-					if (sendnum == Current->Unit.recvnum)
+					if (sendnum == Current->Unit.recvnum&&Current->Unit.RecvFunc==FALSE)
 					{
 						Linklist*outnode = Current;
 						Current = Current->next;
 						deletenode(Head, outnode);
+						closesocket(Current->Unit.s);
 					}
 					else if (sendnum < Current->Unit.recvnum)
 					{
@@ -169,6 +189,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 		}
 	}
 
+	return 0;
 }
 
 Linklist *initlinklist(int n)
