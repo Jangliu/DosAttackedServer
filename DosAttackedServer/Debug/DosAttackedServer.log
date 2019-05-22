@@ -1,2 +1,4 @@
 ﻿  DosAttackedServer.cpp
+c:\users\jangliu\desktop\dosattackedserver\dosattackedserver\dosattackedserver.cpp(39): warning C4305: 'argument': truncation from 'int' to 'u_short'
+c:\users\jangliu\desktop\dosattackedserver\dosattackedserver\dosattackedserver.cpp(39): warning C4309: 'argument': truncation of constant value
   DosAttackedServer.vcxproj -> C:\Users\JangLiu\Desktop\DosAttackedServer\Debug\DosAttackedServer.exe
