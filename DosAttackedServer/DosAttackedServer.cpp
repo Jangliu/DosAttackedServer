@@ -44,7 +44,7 @@ int main()
 	WSAStartup(0x101, &wsa);
 
 	int count = 0;
-	/*while (1)
+	while (1)
 	{
 		if (flag == TRUE)
 		{
@@ -62,8 +62,8 @@ int main()
 				count++;
 			}
 		}
-	}*/
-	recv_proc((LPVOID)&flag);
+	}
+	//recv_proc((LPVOID)&flag);
 }
 
 
@@ -74,7 +74,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 	fd_set write_list;
 	struct timeval tmo;
 	tmo.tv_sec = 1;
-	tmo.tv_usec = 50;
+	tmo.tv_usec = 0;
 	struct unit Units[10];
 	int i = 0;
 	SOCKET MainSocket;
@@ -170,6 +170,31 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 				else if(Checkrecvnum==-1)
 					break;
 			}
+			int cc = getlinklistlength(Head);
+			if (cc == 0)
+				closesocket(Units[j].s);
+			else if (cc > 0)
+			{
+				Current = Head->next;
+				while (Current->Unit.s != Units[j].s&&Current->next!=NULL)
+				{
+					Current = Current->next;
+				}
+				if (Current->next != NULL)
+				{
+					continue;
+				}
+				else if (Current->next == NULL)
+				{
+					if (Current->Unit.s == Units[j].s)
+						continue;
+					else
+					{
+						closesocket(Units[j].s);
+						continue;
+					}
+				}
+			}
 		}
 		int n = getlinklistlength(Head);
 		if (n > 0)
@@ -253,6 +278,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 					}
 				}
 			}
+			//closesocket(Units[0].s);
 		}
 	}
 
