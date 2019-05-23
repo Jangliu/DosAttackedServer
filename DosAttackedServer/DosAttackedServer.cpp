@@ -96,7 +96,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 	listen(MainSocket, 10);
 	int countdown = 10;
 	
-	while (countdown>-1)
+	while (1)
 	{
 		FD_ZERO(&read_list);
 		FD_ZERO(&exception_list);
@@ -141,13 +141,13 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 					Current->next = node;
 					Current->Unit = Units[j];
 				}
-				else if (Checkrecvnum == -1)
+				/*else if (Checkrecvnum == -1)
 				{
 
 					countdown--;
 					shutdown(Units[j].s, SD_RECEIVE);
 					Units[j].RecvFunc = FALSE;
-				}
+				}*/
 				else
 					break;
 			}
