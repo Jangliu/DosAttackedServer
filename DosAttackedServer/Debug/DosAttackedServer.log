@@ -1,2 +1,3 @@
 ﻿  DosAttackedServer.cpp
-  DosAttackedServer.vcxproj -> C:\Users\Jangliu\Desktop\DosAttackedServer\Debug\DosAttackedServer.exe
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(423,5): error MSB6003: The specified task executable "CL.exe" could not be run. 请求的操作无法在使用用户映射区域打开的文件上执行。
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppCommon.targets(423,5): error MSB6003: 
