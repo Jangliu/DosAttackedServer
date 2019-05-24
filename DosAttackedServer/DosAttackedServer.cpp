@@ -26,7 +26,6 @@ typedef struct Unit
 }Linklist;
 
 unsigned _stdcall recv_proc(LPVOID lpParam);
-Linklist *initlinklist(int n);
 Linklist *deletenode(Linklist *Head, Linklist*outnode);
 Linklist *addnode(Linklist*Head, Linklist*addnode);
 int getlinklistlength(Linklist*Head);
@@ -78,7 +77,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 	struct unit Units[10];
 	int i = 0;
 	SOCKET MainSocket;
-	struct sockaddr_in remote_addr,local;
+	struct sockaddr_in remote_addr, local;
 	local.sin_family = AF_INET;
 	local.sin_addr.S_un.S_addr = htonl(INADDR_LOOPBACK);
 	local.sin_port = htons(0x7856);
@@ -86,7 +85,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 	//lo = (sockaddr_in*)lpParam;
 	u_long arg;
 	arg = 1;
-	Linklist*Head,*Current;
+	Linklist*Head, *Current;
 	Head = (Linklist*)malloc(sizeof(Linklist));
 	Head->front = NULL;
 	Head->next = NULL;
@@ -95,8 +94,8 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 	ioctlsocket(MainSocket, FIONBIO, &arg);
 	listen(MainSocket, 10);
 	int countdown = 10;
-	
-	while (countdown>0)
+
+	while (countdown > 0)
 	{
 		FD_ZERO(&read_list);
 		FD_ZERO(&exception_list);
@@ -118,6 +117,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 			{
 				flag = TRUE;
 				closesocket(MainSocket);
+				FD_CLR(MainSocket, &read_list);
 			}
 			for (int j = 0; j < i; j++)
 			{
@@ -140,13 +140,13 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 					shutdown(Units[j].s, SD_RECEIVE);
 					Units[j].RecvFunc = FALSE;
 				}
-				else if (Checkrecvnum != -1&&Checkrecvnum!=0)
+				else if (Checkrecvnum != -1 && Checkrecvnum != 0)
 				{
 					if (FD_ISSET(Units[j].s, &write_list))
 					{
 						int sendnum;
 						char*p = Units[j].buf;
-						sendnum=send(Units[j].s, p, Checkrecvnum, 0);
+						sendnum = send(Units[j].s, p, Checkrecvnum, 0);
 						if (sendnum == Checkrecvnum)
 							continue;
 						else if (sendnum < Checkrecvnum)
@@ -167,33 +167,14 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 						Head = addnode(Head, node);
 					}
 				}
-				else if(Checkrecvnum==-1)
+				else if (Checkrecvnum == -1)
 					break;
 			}
 			int cc = getlinklistlength(Head);
 			if (cc == 0)
-				closesocket(Units[j].s);
-			else if (cc > 0)
 			{
-				Current = Head->next;
-				while (Current->Unit.s != Units[j].s&&Current->next!=NULL)
-				{
-					Current = Current->next;
-				}
-				if (Current->next != NULL)
-				{
-					continue;
-				}
-				else if (Current->next == NULL)
-				{
-					if (Current->Unit.s == Units[j].s)
-						continue;
-					else
-					{
-						closesocket(Units[j].s);
-						continue;
-					}
-				}
+				closesocket(Units[j].s);
+				countdown--;
 			}
 		}
 		int n = getlinklistlength(Head);
@@ -211,7 +192,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 					{
 						printf("成功发送%d字节.\n", sendnum);
 					}
-					if (sendnum == Current->Unit.recvnum)
+					else if (sendnum == Current->Unit.recvnum)
 					{
 						Linklist*outnode = Current;
 						if (Current->Unit.RecvFunc == FALSE)
@@ -234,21 +215,20 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 					}
 				}
 			}
-			
-			select(0, &read_list, &write_list, &exception_list, 0);
+
 			n = getlinklistlength(Head);
 			if (n = 0)
 			{
 				int k = i;
 				for (int j = 0; j < k; j++)
 				{
-					if (FD_ISSET(Units[j].s, &read_list))
-						continue;
-					else
+					if (Units[j].RecvFunc == FALSE)
 					{
 						closesocket(Units[j].s);
 						countdown--;
 					}
+					else
+						continue;
 				}
 			}
 			else
@@ -256,50 +236,27 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 				int k = i;
 				for (int j = 0; j < k; j++)
 				{
-					Current = Head;
+					Current = Head->next;
 					while (Current->next != NULL)
 					{
-						if (Current->next->Unit.s == Units[j].s)
+						if (Current->Unit.s == Units[j].s)
 							break;
 						else
 						{
 							Current = Current->next;
-							if (Current->next == NULL)
-							{
-								if (FD_ISSET(Units[j].s, &read_list))
-									continue;
-								else
-								{
-									closesocket(Units[j].s);
-									countdown--;
-								}
-							}
 						}
+					}
+					if (Current->Unit.s != Units[j].s)
+					{
+						closesocket(Units[j].s);
+						countdown--;
 					}
 				}
 			}
-			//closesocket(Units[0].s);
 		}
 	}
-
+	//printf("a Thread finished.\n");
 	return 0;
-}
-
-Linklist *initlinklist(int n)
-{
-	Linklist *Head, *node;
-	Head = (Linklist*)malloc(sizeof(Unit));
-	Head->front = NULL;
-	Linklist*head = Head;
-	for (int i = 0; i < n; i++)
-	{
-		node = (Linklist*)malloc(sizeof(Unit));
-		head->next = node;
-		node->front = head;
-		head = node;
-	}
-	head->next = NULL;
-	return Head;
 }
 
 Linklist *deletenode(Linklist *Head, Linklist*outnode)
