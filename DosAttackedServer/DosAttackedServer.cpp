@@ -92,7 +92,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 	bind(MainSocket, (sockaddr*)&local, sizeof(local));
 	ioctlsocket(MainSocket, FIONBIO, &arg);
 	listen(MainSocket, 5);
-	int countdown = 5;
+	int countdown = 1;
 
 	while (countdown > 0)
 	{
@@ -110,7 +110,6 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 			len = sizeof(remote_addr);
 			Units[i].s = accept(MainSocket, (sockaddr*)&remote_addr, &len);
 			Units[i].RecvFunc = TRUE;
-			Units[i].recvnum = -3;
 			i++;
 			if (i == 5)
 			{
@@ -126,7 +125,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 				ioctlsocket(Units[j].s, FIONBIO, &arg);
 			}
 		}
-		Sleep(300);
+		/*Sleep(300);
 		for (int j = 0; j < i; j++)
 		{
 			char *p = Units[j].buf;
@@ -166,11 +165,11 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 						node->next = NULL;
 						Head = addnode(Head, node);
 					}
-					/*Units[j].recvnum = Checkrecvnum;
+					Units[j].recvnum = Checkrecvnum;
 					Linklist*node = (Linklist*)malloc(sizeof(Linklist));
 					node->Unit = Units[j];
 					node->next = NULL;
-					Head = addnode(Head, node);*/
+					Head = addnode(Head, node);
 
 				}
 				else if (Checkrecvnum == -1)
@@ -256,8 +255,132 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 				}
 			}
 		}
+		*/
+		bool x = TRUE;
+		int a = 0;
+		while (x)
+		{
+			int N[5] = { 1 };
+			int k = 0;
+			for (int j = 0; j < i; j++)
+			{
+				if (FD_ISSET(Units[j].s, &read_list))
+				{
+					int Checkrecvnum;
+					char*p = Units[j].buf;
+					Checkrecvnum = recv(Units[j].s, p, sizeof(Units[j].buf), 0);
+					if (Checkrecvnum > 0)
+					{
+						int sendnum;
+						sendnum = send(Units[j].s, p, sizeof(Units[j].buf), 0);
+						if (sendnum < Checkrecvnum)
+						{
+							Units[j].recvnum = Checkrecvnum - sendnum;
+							Linklist*node = (Linklist*)malloc(sizeof(Linklist));
+							node->Unit = Units[j];
+							node->next = NULL;
+							Head = addnode(Head, node);
+						}
+						printf("%d\n", a);
+						a++;
+					}
+					else if (Checkrecvnum == 0)
+					{
+						Units[j].RecvFunc = FALSE;
+						x = FALSE;
+					}
+				}
+				else
+				{
+					N[j] = 0;
+				}
+			}
+			for (int j = 0; j < i; j++)
+			{
+				if (N[j] == 0)
+					k++;
+			}
+			if (k == i)
+			{
+				x = FALSE;
+			}
+		}
+		int n = getlinklistlength(Head);
+		if (n == 0)
+		{
+			for (int j = 0; j < i; j++)
+			{
+				if (Units[j].RecvFunc == FALSE)
+				{
+					closesocket(Units[j].s);
+					countdown--;
+				}
+			}
+		}
+		else
+		{
+			Current = Head->next;
+			while (Current->next != NULL)
+			{
+				if (FD_ISSET(Current->Unit.s, &write_list))
+				{
+					int sendnum;
+					char *p = Current->Unit.buf;
+					Sleep(50);
+					sendnum = send(Current->Unit.s, p, sizeof(Current->Unit.buf), 0);
+					if (sendnum == Current->Unit.recvnum)
+					{
+						if (Current->Unit.RecvFunc == FALSE)
+						{
+							closesocket(Current->Unit.s);
+							countdown--;
+						}
+						Linklist*outnode = Current;
+						Current = Current->next;
+						Head = deletenode(Head, outnode);
+					}
+					else
+					{
+						Linklist*outnode = Current;
+						Linklist*innode = (Linklist*)malloc(sizeof(Linklist));
+						innode->Unit.s = Current->Unit.s;
+						innode->Unit.recvnum = Current->Unit.recvnum - sendnum;
+						Current = Current->next;
+						Head = deletenode(Head, outnode);
+						Head = addnode(Head, innode);
+					}
+				}
+			}
+			if (FD_ISSET(Current->Unit.s, &write_list))
+			{
+				int sendnum;
+				char *p = Current->Unit.buf;
+				sendnum = send(Current->Unit.s, p, sizeof(Current->Unit.buf), 0);
+				if (sendnum == Current->Unit.recvnum)
+				{
+					if (Current->Unit.RecvFunc == FALSE)
+					{
+						closesocket(Current->Unit.s);
+						countdown--;
+					}
+					Linklist*outnode = Current;
+					Current = Current->next;
+					Head = deletenode(Head, outnode);
+				}
+				else
+				{
+					Linklist*outnode = Current;
+					Linklist*innode = (Linklist*)malloc(sizeof(Linklist));
+					innode->Unit.s = Current->Unit.s;
+					innode->Unit.recvnum = Current->Unit.recvnum - sendnum;
+					Current = Current->next;
+					Head = deletenode(Head, outnode);
+					Head = addnode(Head, innode);
+				}
+			}
+		}
 	}
-	printf("a Thread finished.\n");
+
 	return 0;
 }
 
