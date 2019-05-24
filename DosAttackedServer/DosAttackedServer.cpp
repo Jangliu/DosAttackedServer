@@ -42,7 +42,7 @@ int main()
 	WSAStartup(0x101, &wsa);
 
 	int count = 0;
-	/*while (1)
+	while (1)
 	{
 		if (flag == TRUE)
 		{
@@ -60,8 +60,8 @@ int main()
 				count++;
 			}
 		}
-	}*/
-	recv_proc((LPVOID)&flag);
+	}
+	//recv_proc((LPVOID)&flag);
 }
 
 
@@ -104,7 +104,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 			FD_SET(MainSocket, &read_list);
 		}
 		select(0, &read_list, &write_list, &exception_list, &tmo);
-		if (FD_ISSET(MainSocket, &read_list))
+		while (FD_ISSET(MainSocket, &read_list))
 		{
 			int len;
 			len = sizeof(remote_addr);
@@ -125,139 +125,9 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 				ioctlsocket(Units[j].s, FIONBIO, &arg);
 			}
 		}
-		/*Sleep(300);
-		for (int j = 0; j < i; j++)
-		{
-			char *p = Units[j].buf;
-			while (FD_ISSET(Units[j].s, &read_list))
-			{
-				Sleep(50);
-				int Checkrecvnum;
-				Checkrecvnum = recv(Units[j].s, p, sizeof(Units[j].buf), 0);
-				if (Checkrecvnum == 0)
-				{
-					shutdown(Units[j].s, SD_RECEIVE);
-					Units[j].RecvFunc = FALSE;
-				}
-				else if (Checkrecvnum != -1 && Checkrecvnum != 0)
-				{
-					if (FD_ISSET(Units[j].s, &write_list))
-					{
-						int sendnum;
-						char*p = Units[j].buf;
-						sendnum = send(Units[j].s, p, Checkrecvnum, 0);
-						if (sendnum == Checkrecvnum)
-							continue;
-						else if (sendnum < Checkrecvnum)
-						{
-							Units[j].recvnum = Checkrecvnum - sendnum;
-							Linklist*node = (Linklist*)malloc(sizeof(Linklist));
-							node->Unit = Units[j];
-							node->next = NULL;
-							Head = addnode(Head, node);
-						}
-					}
-					else
-					{
-						Units[j].recvnum = Checkrecvnum;
-						Linklist*node = (Linklist*)malloc(sizeof(Linklist));
-						node->Unit = Units[j];
-						node->next = NULL;
-						Head = addnode(Head, node);
-					}
-					Units[j].recvnum = Checkrecvnum;
-					Linklist*node = (Linklist*)malloc(sizeof(Linklist));
-					node->Unit = Units[j];
-					node->next = NULL;
-					Head = addnode(Head, node);
-
-				}
-				else if (Checkrecvnum == -1)
-					break;
-			}
-			int cc = getlinklistlength(Head);
-			if (cc == 0&&Units[j].RecvFunc==FALSE)
-			{
-				closesocket(Units[j].s);
-				countdown--;
-			}
-		}
-		int n = getlinklistlength(Head);
-		if (n > 0)
-		{
-			Current = Head->next;
-			for (int j = 0; j < n; j++)
-			{
-				if (FD_ISSET(Current->Unit.s, &write_list))
-				{
-					int sendnum;
-					char *p = Current->Unit.buf;
-					sendnum = send(Current->Unit.s, p, Current->Unit.recvnum, 0);
-					if (sendnum == Current->Unit.recvnum)
-					{
-						Linklist*outnode = Current;
-						if (Current->Unit.RecvFunc == FALSE)
-						{
-							closesocket(Current->Unit.s);
-							countdown--;
-						}
-						Current = Current->next;
-						deletenode(Head, outnode);
-					}
-					else if (sendnum < Current->Unit.recvnum)
-					{
-						Linklist*outnode = Current;
-						Linklist*innode = (Linklist*)malloc(sizeof(Linklist));
-						innode->Unit.s = Current->Unit.s;
-						innode->Unit.recvnum = Current->Unit.recvnum - sendnum;
-						Current = Current->next;
-						Head = deletenode(Head, outnode);
-						Head = addnode(Head, innode);
-					}
-				}
-			}
-
-			n = getlinklistlength(Head);
-			if (n == 0)
-			{
-				int k = i;
-				for (int j = 0; j < k; j++)
-				{
-					if (Units[j].RecvFunc == FALSE)
-					{
-						closesocket(Units[j].s);
-						countdown--;
-					}
-					else
-						continue;
-				}
-			}
-			else
-			{
-				int k = i;
-				for (int j = 0; j < k; j++)
-				{
-					Current = Head->next;
-					while (Current->next != NULL)
-					{
-						if (Current->Unit.s == Units[j].s)
-							break;
-						else
-						{
-							Current = Current->next;
-						}
-					}
-					if (Current->Unit.s != Units[j].s)
-					{
-						closesocket(Units[j].s);
-						countdown--;
-					}
-				}
-			}
-		}
-		*/
 		bool x = TRUE;
 		int a = 0;
+		Sleep(100);
 		while (x)
 		{
 			int N[5] = { 1 };
@@ -272,6 +142,7 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 					if (Checkrecvnum > 0)
 					{
 						int sendnum;
+						Sleep(75);
 						sendnum = send(Units[j].s, p, sizeof(Units[j].buf), 0);
 						if (sendnum < Checkrecvnum)
 						{
@@ -281,8 +152,8 @@ unsigned _stdcall recv_proc(LPVOID lpParam)
 							node->next = NULL;
 							Head = addnode(Head, node);
 						}
-						printf("%d\n", a);
-						a++;
+						//a++;
+						//printf("%d\n", a);
 					}
 					else if (Checkrecvnum == 0)
 					{
